@@ -84,6 +84,8 @@ collectd_client_grain_validity_check:
 
 {%- for plugin_name, plugin in service_grains.collectd.plugin.iteritems() %}
 
+{%- if plugin.get('execution', 'local') == 'local' or client.remote_collector %}
+
 {{ client.config_dir }}/{{ plugin_name }}.conf:
   file.managed:
   {%- if plugin.template is defined %}
@@ -92,7 +94,7 @@ collectd_client_grain_validity_check:
   - defaults:
     plugin: {{ plugin|yaml }}
   {%- else %}
-  - contents: "LoadPlugin {{ plugin.plugin }}\n"
+  - contents: "<LoadPlugin {{ plugin.plugin }}>\n  Globals false\n</LoadPlugin>\n"
   {%- endif %}
   - user: root
   - mode: 660
@@ -102,6 +104,8 @@ collectd_client_grain_validity_check:
     - file: collectd_client_conf_dir_clean
   - watch_in:
     - service: collectd_service
+
+{%- endif %}
 
 {%- endfor %}
 
